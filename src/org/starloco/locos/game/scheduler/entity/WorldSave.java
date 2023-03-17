@@ -13,6 +13,7 @@ import org.starloco.locos.game.scheduler.Updatable;
 import org.starloco.locos.game.world.World;
 import org.starloco.locos.kernel.Main;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class WorldSave extends Updatable {
 
@@ -42,13 +43,13 @@ public class WorldSave extends Updatable {
             SocketManager.GAME_SEND_Im_PACKET_TO_ALL("1164;");
             Main.isSaving = true;
 
-            /** Save of data **/
+            /* Save of data */
             World.world.logger.info("-> of accounts.");
-            World.world.getAccounts().stream().filter(account -> account != null).forEach(account -> Database.getStatics().getAccountData().update(account));
+            World.world.getAccounts().stream().filter(Objects::nonNull).forEach(account -> Database.getStatics().getAccountData().update(account));
 
             World.world.logger.info("-> of players.");
             World.world.logger.info("-> of members of guilds.");
-            World.world.getPlayers().stream().filter(player -> player != null).filter(Player::isOnline).forEach(player -> {
+            World.world.getPlayers().stream().filter(Objects::nonNull).filter(Player::isOnline).forEach(player -> {
                 Database.getStatics().getPlayerData().update(player);
                 if (player.getGuildMember() != null)
                     Database.getDynamics().getGuildMemberData().update(player);
@@ -62,7 +63,7 @@ public class WorldSave extends Updatable {
                     Database.getDynamics().getPrismData().update(prism);
 
             World.world.logger.info("-> of guilds.");
-            World.world.getGuilds().values().stream().forEach(guild -> Database.getDynamics().getGuildData().update(guild));
+            World.world.getGuilds().values().forEach(guild -> Database.getDynamics().getGuildData().update(guild));
 
             World.world.logger.info("-> of collectors.");
             World.world.getCollectors().values().stream().filter(collector -> collector.getInFight() <= 0).forEach(collector -> Database.getDynamics().getCollectorData().update(collector));
@@ -71,19 +72,21 @@ public class WorldSave extends Updatable {
             World.world.getHouses().values().stream().filter(house -> house.getOwnerId() > 0).forEach(house -> Database.getDynamics().getHouseData().update(house));
 
             World.world.logger.info("-> of trunks.");
-            World.world.getTrunks().values().stream().forEach(trunk -> Database.getDynamics().getTrunkData().update(trunk));
+            World.world.getTrunks().values().forEach(trunk -> Database.getDynamics().getTrunkData().update(trunk));
 
             World.world.logger.info("-> of parks.");
             World.world.getMountparks().values().stream().filter(mp -> mp.getOwner() > 0 || mp.getOwner() == -1).forEach(mp -> Database.getDynamics().getMountParkData().update(mp));
 
             World.world.logger.info("-> of mounts.");
-            World.world.getMounts().values().stream().forEach(mount -> Database.getDynamics().getMountData().update(mount));
+            World.world.getMounts().values().forEach(mount -> Database.getDynamics().getMountData().update(mount));
 
             World.world.logger.info("-> of areas.");
-            World.world.getAreas().values().stream().forEach(area -> Database.getDynamics().getAreaData().update(area));
-            World.world.getSubAreas().values().stream().forEach(subArea -> Database.getDynamics().getSubAreaData().update(subArea));
+            World.world.getAreas().values().forEach(area -> Database.getDynamics().getAreaData().update(area));
+            World.world.getSubAreas().values().forEach(subArea -> Database.getDynamics().getSubAreaData().update(subArea));
             World.world.logger.info("-> of Gladiatrool Spell Places.");
-            World.world.getAllGladiatroolSpells().values().stream().forEach(gladiatroolSpells -> Database.getDynamics().getGladiatroolSpellsData().update(gladiatroolSpells));
+            World.world.getAllGladiatroolSpells().values().forEach(gladiatroolSpells -> Database.getDynamics().getGladiatroolSpellsData().update(gladiatroolSpells));
+            World.world.logger.info("-> of Quicksets.");
+            World.world.getAllQuickSets().values().forEach(quicksets -> Database.getDynamics().getQuickSetsData().update(quicksets));
             World.world.logger.info("-> of objects.");
             try {
                 for (GameObject object : new ArrayList<>(World.world.getGameObjects())) {
@@ -97,6 +100,8 @@ public class WorldSave extends Updatable {
             } catch(Exception e) {
                 e.printStackTrace();
             }
+            World.world.logger.info("-> of Shortcuts.");
+            World.world.getAllShortcuts().values().forEach(shortcuts -> Database.getDynamics().getShortcutsData().update(shortcuts));
 
             if(Config.getInstance().HEROIC) {
                 for (GameMap map : World.world.getMaps())
@@ -105,7 +110,7 @@ public class WorldSave extends Updatable {
                             .forEach(group -> Database.getDynamics().getHeroicMobsGroups().update(map.getId(), group));
                 Database.getDynamics().getHeroicMobsGroups().updateFix();
             }
-            /** end save of data **/
+            /* end save of data */
 
             World.world.logger.debug("The save has been doing successfully !");
             SocketManager.GAME_SEND_Im_PACKET_TO_ALL("1165;");

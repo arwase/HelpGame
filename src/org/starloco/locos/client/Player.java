@@ -403,7 +403,6 @@ public class Player {
                 this.curPdv = (this.maxPdv * pdvPer / 100);
             if (this.curPdv <= 0)
                 this.curPdv = 1;
-            parseSpells(spells);
             if (!morphMode.equals("")) {
                 if (morphMode.equals("0"))
                     morphMode = "0;0";
@@ -412,6 +411,7 @@ public class Player {
                 if (!i[1].equals(""))
                     _morphId = Integer.parseInt(i[1]);
             }
+            parseSpells(spells);
             if (_morphMode)
                 this._saveSpellPts = pts;
             else
@@ -450,7 +450,7 @@ public class Player {
             	}catch(NumberFormatException | ArrayIndexOutOfBoundsException e)
             	{
             		e.printStackTrace();
-            		Main.stop("Probl�me lors de la cr�ation de personnnage au niveau des artefact");
+            		Main.stop("Problême lors de la création de personnage au niveau des artefact");
             	}
             }
             if(saveSpells != null) {
@@ -466,6 +466,8 @@ public class Player {
                         savedSpells.put(spellId, spell.getSortsStats().get(spellLevel));
                         savedSpellsPlaces.put(spellId, spellPlace);
                     }
+                    _saveSorts = savedSpells;
+                    _saveSortsPlaces = savedSpellsPlaces;
                 }
             }
             _saveSpellPts = saveSpellPts;
@@ -1599,8 +1601,14 @@ public class Player {
             }
         }
         if (this.fight == null) {
-            if (!Constant.isGladiatroolWeapon(this.getObjetByPos(Constant.ITEM_POS_ARME).getTemplate().getId())) {
-                SocketManager.GAME_SEND_STATS_PACKET(this);
+            GameObject weaponObject = this.getObjetByPos(Constant.ITEM_POS_ARME);
+            if(weaponObject != null) {
+                ObjectTemplate weaponTemplate = weaponObject.getTemplate();
+                if(weaponTemplate != null) {
+                    if (!Constant.isGladiatroolWeapon(weaponTemplate.getId())) {
+                        SocketManager.GAME_SEND_STATS_PACKET(this);
+                    }
+                }
             }
         }
         if (!join)
@@ -1899,8 +1907,35 @@ public class Player {
                 SocketManager.GAME_SEND_xC_PAQUET(this, quickset);
             }
         }
+        List<Shortcuts> shortcuts = World.world.getShortcutsFromPlayer(this);
+        if(shortcuts != null) {
+            for(Shortcuts shortcut : shortcuts){
+                SocketManager.GAME_SEND_ADD_SHORTCUT(this, shortcut);
+            }
+        }
+        verifIfPlayerHasAllTonique();
     }
 
+    public void verifIfPlayerHasAllTonique()
+    {
+        if(_morphMode) {
+            List<GameObject> toniques = new ArrayList<>();
+            for (int i = Constant.ITEM_POS_TONIQUE1; i < Constant.ITEM_POS_TONIQUE9; i++) {
+                GameObject object = getObjetByPos(i);
+                if (object != null)
+                    toniques.add(object);
+            }
+            if (Constant.isInGladiatorDonjon(Integer.parseInt(String.valueOf(curMap.getId())))) {
+                int index = Constant.GLADIATROOL_MAPID.indexOf(Integer.parseInt(String.valueOf(curMap.getId())));
+                if (index != -1) {
+                    if(index != toniques.size())
+                    {
+                        SocketManager.GAME_SEND_wr(this, Constant.getPalierByNewMap(this.curMap.getId()));
+                    }
+                }
+            }
+        }
+    }
     public void checkVote() {
         String IP = this.getAccount().getLastIP();
         long now = System.currentTimeMillis() / 1000;
@@ -3122,13 +3157,19 @@ public class Player {
             this.unsetFullMorph();
 
         if(deleteGladiaWeapon) {
-            if ( Constant.isGladiatroolWeapon(this.getObjetByPos(Constant.ITEM_POS_ARME).getTemplate().getId()) ) {
+            GameObject weaponObject = this.getObjetByPos(Constant.ITEM_POS_ARME);
+            if(weaponObject != null) {
+                ObjectTemplate weaponTemplate = weaponObject.getTemplate();
+                if(weaponTemplate != null) {
+                    if (Constant.isGladiatroolWeapon(weaponTemplate.getId())) {
 
-                this.removeByTemplateID(this.getObjetByPos(Constant.ITEM_POS_ARME).getTemplate().getId(),1);
-                /*this.getGameClient().destroyObject("Od"+this.getObjetByPos(Constant.ITEM_POS_ARME).getGuid()+"|1");*/
+                        this.removeByTemplateID(this.getObjetByPos(Constant.ITEM_POS_ARME).getTemplate().getId(), 1);
+                        /*this.getGameClient().destroyObject("Od"+this.getObjetByPos(Constant.ITEM_POS_ARME).getGuid()+"|1");*/
 
-                for(int i=Constant.ITEM_POS_TONIQUE_EQUILIBRAGE;i<= Constant.ITEM_POS_TONIQUE9;i++){
-                    this.removeTonique(i);
+                        for (int i = Constant.ITEM_POS_TONIQUE_EQUILIBRAGE; i <= Constant.ITEM_POS_TONIQUE9; i++) {
+                            this.removeTonique(i);
+                        }
+                    }
                 }
             }
         }
@@ -5413,7 +5454,7 @@ public class Player {
                 _itemClasse.add(template);
             
         }
-        for(int j = 65; j < 75; j++) {
+        for(int j = Constant.ITEM_POS_TONIQUE_EQUILIBRAGE; j < Constant.ITEM_POS_TONIQUE9; j++) {
             if (getObjetByPos(j) == null)
                 continue;
             final GameObject obj = getObjetByPos(j);
@@ -5818,6 +5859,7 @@ public class Player {
 		stats.addOneStat(Constant.STATS_ADD_CHAN, keep - stats.getEffect(Constant.STATS_ADD_CHAN));
 		final Prestige prestige = World.world.getPrestigeById(this.getPrestige());
 		if(prestige != null) prestige.getPrestigeBonus().giveBonusAfterRestat(this);
+
 	}
 	
 	public void restatKeepParcho()

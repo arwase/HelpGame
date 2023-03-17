@@ -2576,13 +2576,15 @@ public class Fight {
 	
 	public boolean checkIfTrapCanBePlaced(SortStats ss, Fighter caster, GameCase cell) {
         boolean cellIsEmpty = true;
-        if (ss.isTrap()) {
-            boolean alreadyHasTrap = allTraps.stream().anyMatch(t -> t.getCell().getId() == cell.getId());
-            if (alreadyHasTrap) {
-                final Player personnage = caster.getPersonnage();
-                if (personnage != null) {
-                    SocketManager.GAME_SEND_Im_PACKET(personnage, "1229"); // Warn the player about existing trap on the desired cell
-                    cellIsEmpty = false;
+        if (ss != null) {
+            if (ss.isTrap()) {
+                boolean alreadyHasTrap = allTraps.stream().anyMatch(t -> t.getCell().getId() == cell.getId());
+                if (alreadyHasTrap) {
+                    final Player personnage = caster.getPersonnage();
+                    if (personnage != null) {
+                        SocketManager.GAME_SEND_Im_PACKET(personnage, "1229"); // Warn the player about existing trap on the desired cell
+                        cellIsEmpty = false;
+                    }
                 }
             }
         }
@@ -2943,13 +2945,18 @@ public class Fight {
                     this.onFighterDie(entry, caster);
 
                     try {
-                        int index = this.getOrderPlaying().indexOf(entry);
-                        if (index != -1)
-                            this.getOrderPlaying().remove(index);
-                        if (this.getTeam0().containsKey(entry.getId()))
-                            this.getTeam0().remove(entry.getId());
-                        else if (this.getTeam1().containsKey(entry.getId()))
-                            this.getTeam1().remove(entry.getId());
+                        List<Fighter> orderPlaying = this.getOrderPlaying();
+                        if(orderPlaying != null) {
+                            if(orderPlaying.contains(entry)) {
+                                int index = orderPlaying.indexOf(entry);
+                                if (index != -1)
+                                    this.getOrderPlaying().remove(index);
+                                if (this.getTeam0().containsKey(entry.getId()))
+                                    this.getTeam0().remove(entry.getId());
+                                else if (this.getTeam1().containsKey(entry.getId()))
+                                    this.getTeam1().remove(entry.getId());
+                            }
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

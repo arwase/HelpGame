@@ -2,6 +2,7 @@ package org.starloco.locos.common;
 
 import org.starloco.locos.client.Player;
 import org.starloco.locos.client.other.QuickSet;
+import org.starloco.locos.client.other.Shortcuts;
 import org.starloco.locos.entity.Collector;
 import org.starloco.locos.entity.mount.Mount;
 import org.starloco.locos.entity.Prism;
@@ -2686,6 +2687,19 @@ public class SocketManager {
 
     public static void GAME_SEND_wr(Player player,int palier) {
         String packet = player.getWrPacket(palier);
+        send(player, packet);
+    }
+
+    public static void GAME_SEND_ADD_SHORTCUT(Player player, Shortcuts shortcut)
+    {
+        if(shortcut.getObject() != null) {
+            String packet = "OrA" + shortcut.getPosition() + ";" + shortcut.getObject().getTemplate().getId() + ";" + shortcut.getObject().parseToSave();
+            send(player, packet);
+        }
+    }
+    public static void GAME_SEND_REMOVE_SHORTCUT(Player player, int pos)
+    {
+        String packet = "OrR" + pos;
         send(player, packet);
     }
 }
